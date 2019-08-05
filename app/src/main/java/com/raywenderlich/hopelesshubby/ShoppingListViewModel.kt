@@ -1,27 +1,35 @@
 package com.raywenderlich.hopelesshubby
 
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 
 
-class ShoppingListViewModel() : ViewModel() {
+class ShoppingListViewModel(val savedStateHandle: SavedStateHandle) : ViewModel() {
 
-    /**
-     * An array list of ShoppingListItem.
-     */
-    val items = MutableLiveData<ArrayList<String>>()
+    private val KEY = "Saved_Shopping_List"
 
+    fun getItems(): LiveData<ArrayList<String>> {
+        return savedStateHandle.getLiveData(KEY)
+    }
 
     fun loadShoppingList() {
 
-        if (items.value.isNullOrEmpty()) {
-            items.value = generateItems()
-
+        if (getItems().value != null) {
+            if (getItems().value!!.isEmpty()) {
+                getItems().value!!.addAll(generateItems())
+                savedStateHandle.set(KEY, getItems().value)
+            }
+        } else {
+            savedStateHandle.set(KEY, arrayListOf<String>())
+            loadShoppingList()
         }
+
     }
 
     fun addItemToShoppingList(itemName: String) {
-        items.value?.add(itemName)
+        getItems().value!!.add(itemName)
+        savedStateHandle.set(KEY, getItems().value)
     }
 
     /**
@@ -37,6 +45,5 @@ class ShoppingListViewModel() : ViewModel() {
 
         return list
     }
-
 
 }
